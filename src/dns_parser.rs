@@ -10,7 +10,7 @@ use crate::{
     service_info::{decode_txt, valid_ip_on_intf, DnsRegistry},
     Error, Result, ServiceInfo,
 };
-use if_addrs::Interface;
+// use if_addrs::Interface;
 use std::{
     any::Any,
     cmp,
@@ -460,9 +460,9 @@ impl DnsAddress {
     }
 
     /// Returns whether this address is in the same subnet of `intf`.
-    pub fn in_subnet(&self, intf: &Interface) -> bool {
-        valid_ip_on_intf(&self.address, intf)
-    }
+    // pub fn in_subnet(&self, intf: &Interface) -> bool {
+    //     valid_ip_on_intf(&self.address, intf)
+    // }
 }
 
 impl DnsRecordExt for DnsAddress {
@@ -1309,14 +1309,14 @@ impl DnsOutgoing {
         &mut self,
         msg: &DnsIncoming,
         service: &ServiceInfo,
-        intf: &Interface,
+        /*intf: &Interface,*/
         dns_registry: &DnsRegistry,
     ) {
-        let intf_addrs = service.get_addrs_on_intf(intf);
-        if intf_addrs.is_empty() {
-            trace!("No addrs on LAN of intf {:?}", intf);
-            return;
-        }
+        // let intf_addrs = service.get_addrs_on_intf(intf);
+        // if intf_addrs.is_empty() {
+        //     trace!("No addrs on LAN of intf {:?}", intf);
+        //     return;
+        // }
 
         // check if we changed our name due to conflicts.
         let service_fullname = match dns_registry.name_changes.get(service.get_fullname()) {
@@ -1375,15 +1375,15 @@ impl DnsOutgoing {
             service.generate_txt(),
         ));
 
-        for address in intf_addrs {
-            self.add_additional_answer(DnsAddress::new(
-                hostname,
-                ip_address_to_type(&address),
-                CLASS_IN | CLASS_CACHE_FLUSH,
-                service.get_host_ttl(),
-                address,
-            ));
-        }
+        // for address in intf_addrs {
+        //     self.add_additional_answer(DnsAddress::new(
+        //         hostname,
+        //         ip_address_to_type(&address),
+        //         CLASS_IN | CLASS_CACHE_FLUSH,
+        //         service.get_host_ttl(),
+        //         address,
+        //     ));
+        // }
     }
 
     pub fn add_question(&mut self, name: &str, qtype: RRType) {

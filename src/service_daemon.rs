@@ -1945,13 +1945,13 @@ impl Zeroconf {
             // check against possible multicast forwarding
             if answer.get_type() == RRType::A || answer.get_type() == RRType::AAAA {
                 if let Some(answer_addr) = answer.any().downcast_ref::<DnsAddress>() {
-                    if !answer_addr.in_subnet(intf) {
-                        debug!(
-                            "conflict handler: answer addr {:?} not in the subnet of {:?}",
-                            answer_addr, intf
-                        );
-                        continue;
-                    }
+                    // if !answer_addr.in_subnet(intf) {
+                    //     debug!(
+                    //         "conflict handler: answer addr {:?} not in the subnet of {:?}",
+                    //         answer_addr, intf
+                    //     );
+                    //     continue;
+                    // }
                 }
             }
 
