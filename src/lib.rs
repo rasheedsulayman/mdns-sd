@@ -145,22 +145,22 @@ mod log {
     macro_rules! error    ( ($($tt:tt)*) => {{}} );
 }
 
-mod dns_cache;
+// mod dns_cache;
 mod dns_parser;
-mod error;
-mod service_daemon;
-mod service_info;
-
-pub use dns_parser::RRType;
-pub use error::{Error, Result};
-pub use service_daemon::{
-    DaemonEvent, DaemonStatus, DnsNameChange, HostnameResolutionEvent, IfKind, Metrics,
-    ServiceDaemon, ServiceEvent, UnregisterStatus, SERVICE_NAME_LEN_MAX_DEFAULT,
-    VERIFY_TIMEOUT_DEFAULT,
-};
-pub use service_info::{AsIpAddrs, IntoTxtProperties, ServiceInfo, TxtProperties, TxtProperty};
+// mod error;
+// mod service_daemon;
+// mod service_info;
+//
+// pub use dns_parser::RRType;
+// pub use error::{Error, Result};
+// pub use service_daemon::{
+//     DaemonEvent, DaemonStatus, DnsNameChange, HostnameResolutionEvent, IfKind, Metrics,
+//     ServiceDaemon, ServiceEvent, UnregisterStatus, SERVICE_NAME_LEN_MAX_DEFAULT,
+//     VERIFY_TIMEOUT_DEFAULT,
+// };
+// pub use service_info::{AsIpAddrs, IntoTxtProperties, ServiceInfo, TxtProperties, TxtProperty};
 
 /// A handler to receive messages from [ServiceDaemon]. Re-export from `flume` crate.
-pub use flume::Receiver;
+// pub use flume::Receiver;
 
 pub use dns_parser::*;
