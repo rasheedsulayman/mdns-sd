@@ -148,8 +148,8 @@ pub const fn ip_address_to_type(address: &IpAddr) -> RRType {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct DnsEntry {
-    pub(crate) name: String, // always lower case.
-    pub(crate) ty: RRType,
+    pub name: String, // always lower case.
+    pub ty: RRType,
     class: u16,
     cache_flush: bool,
 }
@@ -168,7 +168,7 @@ impl DnsEntry {
 /// A DNS question entry
 #[derive(Debug)]
 pub struct DnsQuestion {
-    pub(crate) entry: DnsEntry,
+    pub entry: DnsEntry,
 }
 
 /// A DNS Resource Record - like a DNS entry, but has a TTL.
@@ -176,7 +176,7 @@ pub struct DnsQuestion {
 ///      https://www.rfc-editor.org/rfc/rfc1035#section-4.1.3
 #[derive(Debug, Clone)]
 pub struct DnsRecord {
-    pub(crate) entry: DnsEntry,
+    pub entry: DnsEntry,
     ttl: u32,     // in seconds, 0 means this record should not be cached
     created: u64, // UNIX time in millis
     expires: u64, // expires at this UNIX time in millis
@@ -210,40 +210,40 @@ impl DnsRecord {
         }
     }
 
-    pub(crate) const fn get_expire_time(&self) -> u64 {
+    pub const fn get_expire_time(&self) -> u64 {
         self.expires
     }
 
-    pub(crate) const fn get_refresh_time(&self) -> u64 {
+    pub const fn get_refresh_time(&self) -> u64 {
         self.refresh
     }
 
-    pub(crate) const fn is_expired(&self, now: u64) -> bool {
+    pub const fn is_expired(&self, now: u64) -> bool {
         now >= self.expires
     }
 
-    pub(crate) const fn refresh_due(&self, now: u64) -> bool {
+    pub const fn refresh_due(&self, now: u64) -> bool {
         now >= self.refresh
     }
 
     /// Returns whether `now` (in millis) has passed half of TTL.
-    pub(crate) fn halflife_passed(&self, now: u64) -> bool {
+    pub fn halflife_passed(&self, now: u64) -> bool {
         let halflife = get_expiration_time(self.created, self.ttl, 50);
         now > halflife
     }
 
-    pub(crate) fn is_unique(&self) -> bool {
+    pub fn is_unique(&self) -> bool {
         self.entry.cache_flush
     }
 
     /// Updates the refresh time to be the same as the expire time so that
     /// this record will not refresh again and will just expire.
-    pub(crate) fn refresh_no_more(&mut self) {
+    pub fn refresh_no_more(&mut self) {
         self.refresh = get_expiration_time(self.created, self.ttl, 100);
     }
 
     /// Returns if this record is due for refresh. If yes, `refresh` time is updated.
-    pub(crate) fn refresh_maybe(&mut self, now: u64) -> bool {
+    pub fn refresh_maybe(&mut self, now: u64) -> bool {
         if self.is_expired(now) || !self.refresh_due(now) {
             return false;
         }
@@ -297,14 +297,14 @@ impl DnsRecord {
     }
 
     /// Modify TTL to reflect the remaining life time from `now`.
-    pub(crate) fn update_ttl(&mut self, now: u64) {
+    pub fn update_ttl(&mut self, now: u64) {
         if now > self.created {
             let elapsed = now - self.created;
             self.ttl -= (elapsed / 1000) as u32;
         }
     }
 
-    pub(crate) fn set_new_name(&mut self, new_name: String) {
+    pub fn set_new_name(&mut self, new_name: String) {
         if new_name == self.entry.name {
             self.new_name = None;
         } else {
@@ -312,16 +312,16 @@ impl DnsRecord {
         }
     }
 
-    pub(crate) fn get_new_name(&self) -> Option<&str> {
+    pub fn get_new_name(&self) -> Option<&str> {
         self.new_name.as_deref()
     }
 
     /// Return the new name if exists, otherwise the regular name in DnsEntry.
-    pub(crate) fn get_name(&self) -> &str {
+    pub fn get_name(&self) -> &str {
         self.new_name.as_deref().unwrap_or(&self.entry.name)
     }
 
-    pub(crate) fn get_original_name(&self) -> &str {
+    pub fn get_original_name(&self) -> &str {
         &self.entry.name
     }
 }
@@ -449,18 +449,18 @@ pub trait DnsRecordExt: fmt::Debug {
 
 #[derive(Debug, Clone)]
 pub struct DnsAddress {
-    pub(crate) record: DnsRecord,
-    pub(crate) address: IpAddr,
+    pub record: DnsRecord,
+    pub address: IpAddr,
 }
 
 impl DnsAddress {
-    pub(crate) fn new(name: &str, ty: RRType, class: u16, ttl: u32, address: IpAddr) -> Self {
+    pub fn new(name: &str, ty: RRType, class: u16, ttl: u32, address: IpAddr) -> Self {
         let record = DnsRecord::new(name, ty, class, ttl);
         Self { record, address }
     }
 
     /// Returns whether this address is in the same subnet of `intf`.
-    pub(crate) fn in_subnet(&self, intf: &Interface) -> bool {
+    pub fn in_subnet(&self, intf: &Interface) -> bool {
         valid_ip_on_intf(&self.address, intf)
     }
 }
@@ -520,11 +520,11 @@ impl DnsRecordExt for DnsAddress {
 #[derive(Debug, Clone)]
 pub struct DnsPointer {
     record: DnsRecord,
-    pub(crate) alias: String, // the full name of Service Instance
+    pub alias: String, // the full name of Service Instance
 }
 
 impl DnsPointer {
-    pub(crate) fn new(name: &str, ty: RRType, class: u16, ttl: u32, alias: String) -> Self {
+    pub fn new(name: &str, ty: RRType, class: u16, ttl: u32, alias: String) -> Self {
         let record = DnsRecord::new(name, ty, class, ttl);
         Self { record, alias }
     }
@@ -581,17 +581,17 @@ impl DnsRecordExt for DnsPointer {
 // In common cases, there is one and only one SRV record for a particular fullname.
 #[derive(Debug, Clone)]
 pub struct DnsSrv {
-    pub(crate) record: DnsRecord,
-    pub(crate) priority: u16,
+    pub record: DnsRecord,
+    pub priority: u16,
     // lower number means higher priority. Should be 0 in common cases.
-    pub(crate) weight: u16,
+    pub weight: u16,
     // Should be 0 in common cases
-    pub(crate) host: String,
-    pub(crate) port: u16,
+    pub host: String,
+    pub port: u16,
 }
 
 impl DnsSrv {
-    pub(crate) fn new(
+    pub fn new(
         name: &str,
         class: u16,
         ttl: u32,
@@ -710,12 +710,12 @@ impl DnsRecordExt for DnsSrv {
 //    string (including subsequent '=' characters, if any) is the value
 #[derive(Clone)]
 pub struct DnsTxt {
-    pub(crate) record: DnsRecord,
-    pub(crate) text: Vec<u8>,
+    pub record: DnsRecord,
+    pub text: Vec<u8>,
 }
 
 impl DnsTxt {
-    pub(crate) fn new(name: &str, class: u16, ttl: u32, text: Vec<u8>) -> Self {
+    pub fn new(name: &str, class: u16, ttl: u32, text: Vec<u8>) -> Self {
         let record = DnsRecord::new(name, RRType::TXT, class, ttl);
         Self { record, text }
     }
@@ -873,7 +873,7 @@ impl DnsNSec {
     }
 
     /// Returns the types marked by `type_bitmap`
-    pub(crate) fn _types(&self) -> Vec<u16> {
+    pub fn _types(&self) -> Vec<u16> {
         // From RFC 4034: 4.1.2 The Type Bit Maps Field
         // https://datatracker.ietf.org/doc/html/rfc4034#section-4.1.2
         //
@@ -967,7 +967,7 @@ enum PacketState {
 }
 
 /// A single packet for outgoing DNS message.
-pub(crate) struct DnsOutPacket {
+pub struct DnsOutPacket {
     /// All bytes in `data` concatenated is the actual packet on the wire.
     data: Vec<Vec<u8>>,
 
@@ -1040,7 +1040,7 @@ impl DnsOutPacket {
         true
     }
 
-    pub(crate) fn insert_short(&mut self, index: usize, value: u16) {
+    pub fn insert_short(&mut self, index: usize, value: u16) {
         self.data.insert(index, value.to_be_bytes().to_vec());
         self.size += 2;
     }
@@ -1188,13 +1188,13 @@ impl DnsOutPacket {
 /// is [DnsOutPacket].
 pub struct DnsOutgoing {
     flags: u16,
-    pub(crate) id: u16,
+    pub id: u16,
     multicast: bool,
     pub questions: Vec<DnsQuestion>,
-    pub(crate) answers: Vec<(DnsRecordBox, u64)>,
-    pub(crate) authorities: Vec<DnsRecordBox>,
-    pub(crate) additionals: Vec<DnsRecordBox>,
-    pub(crate) known_answer_count: i64, // for internal maintenance only
+    pub answers: Vec<(DnsRecordBox, u64)>,
+    pub authorities: Vec<DnsRecordBox>,
+    pub additionals: Vec<DnsRecordBox>,
+    pub known_answer_count: i64, // for internal maintenance only
 }
 
 impl DnsOutgoing {
@@ -1211,7 +1211,7 @@ impl DnsOutgoing {
         }
     }
 
-    pub(crate) const fn is_query(&self) -> bool {
+    pub const fn is_query(&self) -> bool {
         (self.flags & FLAGS_QR_MASK) == FLAGS_QR_QUERY
     }
 
@@ -1252,23 +1252,23 @@ impl DnsOutgoing {
     //    server/responder SHOULD include the following additional records:
 
     //    o  All address records (type "A" and "AAAA") named in the SRV rdata.
-    pub(crate) fn add_additional_answer(&mut self, answer: impl DnsRecordExt + 'static) {
+    pub fn add_additional_answer(&mut self, answer: impl DnsRecordExt + 'static) {
         trace!("add_additional_answer: {:?}", &answer);
         self.additionals.push(Box::new(answer));
     }
 
     /// A workaround as Rust doesn't allow us to pass DnsRecordBox in as `impl DnsRecordExt`
-    pub(crate) fn add_answer_box(&mut self, answer_box: DnsRecordBox) {
+    pub fn add_answer_box(&mut self, answer_box: DnsRecordBox) {
         self.answers.push((answer_box, 0));
     }
 
-    pub(crate) fn add_authority(&mut self, record: DnsRecordBox) {
+    pub fn add_authority(&mut self, record: DnsRecordBox) {
         self.authorities.push(record);
     }
 
     /// Returns true if `answer` is added to the outgoing msg.
     /// Returns false if `answer` was not added as it expired or suppressed by the incoming `msg`.
-    pub(crate) fn add_answer(
+    pub fn add_answer(
         &mut self,
         msg: &DnsIncoming,
         answer: impl DnsRecordExt + Send + 'static,
@@ -1286,7 +1286,7 @@ impl DnsOutgoing {
     /// Returns true if `answer` is added to the outgoing msg.
     /// Returns false if the answer is expired `now` hence not added.
     /// If `now` is 0, do not check if the answer expires.
-    pub(crate) fn add_answer_at_time(
+    pub fn add_answer_at_time(
         &mut self,
         answer: impl DnsRecordExt + Send + 'static,
         now: u64,
@@ -1305,7 +1305,7 @@ impl DnsOutgoing {
     /// If there are no addresses on the LAN of `intf`, we will not
     /// add any answers for `service`. In other words, we only
     /// add addresses that are valid on `intf`.
-    pub(crate) fn add_answer_with_additionals(
+    pub fn add_answer_with_additionals(
         &mut self,
         msg: &DnsIncoming,
         service: &ServiceInfo,
@@ -1400,7 +1400,7 @@ impl DnsOutgoing {
     }
 
     /// Encode self into one or more packets.
-    pub(crate) fn to_packets(&self) -> Vec<DnsOutPacket> {
+    pub fn to_packets(&self) -> Vec<DnsOutPacket> {
         let mut packet_list = Vec::new();
         let mut packet = DnsOutPacket::new();
 
@@ -1478,20 +1478,20 @@ impl DnsOutgoing {
 pub struct DnsIncoming {
     offset: usize,
     data: Vec<u8>,
-    pub(crate) questions: Vec<DnsQuestion>,
-    pub(crate) answers: Vec<DnsRecordBox>,
-    pub(crate) authorities: Vec<DnsRecordBox>,
-    pub(crate) additional: Vec<DnsRecordBox>,
-    pub(crate) id: u16,
+    pub questions: Vec<DnsQuestion>,
+    pub answers: Vec<DnsRecordBox>,
+    pub authorities: Vec<DnsRecordBox>,
+    pub additional: Vec<DnsRecordBox>,
+    pub id: u16,
     flags: u16,
-    pub(crate) num_questions: u16,
-    pub(crate) num_answers: u16,
-    pub(crate) num_authorities: u16,
-    pub(crate) num_additionals: u16,
+    pub num_questions: u16,
+    pub num_answers: u16,
+    pub num_authorities: u16,
+    pub num_additionals: u16,
 }
 
 impl DnsIncoming {
-    pub(crate) fn new(data: Vec<u8>) -> Result<Self> {
+    pub fn new(data: Vec<u8>) -> Result<Self> {
         let mut incoming = Self {
             offset: 0,
             data,
@@ -1535,11 +1535,11 @@ impl DnsIncoming {
         Ok(incoming)
     }
 
-    pub(crate) const fn is_query(&self) -> bool {
+    pub const fn is_query(&self) -> bool {
         (self.flags & FLAGS_QR_MASK) == FLAGS_QR_QUERY
     }
 
-    pub(crate) const fn is_response(&self) -> bool {
+    pub const fn is_response(&self) -> bool {
         (self.flags & FLAGS_QR_MASK) == FLAGS_QR_RESPONSE
     }
 
