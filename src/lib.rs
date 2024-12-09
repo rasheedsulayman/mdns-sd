@@ -162,3 +162,5 @@ pub use service_info::{AsIpAddrs, IntoTxtProperties, ServiceInfo, TxtProperties,
 
 /// A handler to receive messages from [ServiceDaemon]. Re-export from `flume` crate.
 pub use flume::Receiver;
+
+pub use dns_parser::*;
