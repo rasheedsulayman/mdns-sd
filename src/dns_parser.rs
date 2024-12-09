@@ -7,8 +7,8 @@
 #[cfg(feature = "logging")]
 use crate::log::trace;
 use crate::{
-    service_info::{decode_txt, valid_ip_on_intf, DnsRegistry},
-    Error, Result, ServiceInfo,
+    service_info::{decode_txt, DnsRegistry},
+    Error, Result,
 };
 // use if_addrs::Interface;
 use std::{
@@ -1305,86 +1305,86 @@ impl DnsOutgoing {
     /// If there are no addresses on the LAN of `intf`, we will not
     /// add any answers for `service`. In other words, we only
     /// add addresses that are valid on `intf`.
-    pub fn add_answer_with_additionals(
-        &mut self,
-        msg: &DnsIncoming,
-        service: &ServiceInfo,
-        /*intf: &Interface,*/
-        dns_registry: &DnsRegistry,
-    ) {
-        // let intf_addrs = service.get_addrs_on_intf(intf);
-        // if intf_addrs.is_empty() {
-        //     trace!("No addrs on LAN of intf {:?}", intf);
-        //     return;
-        // }
-
-        // check if we changed our name due to conflicts.
-        let service_fullname = match dns_registry.name_changes.get(service.get_fullname()) {
-            Some(new_name) => new_name,
-            None => service.get_fullname(),
-        };
-
-        let hostname = match dns_registry.name_changes.get(service.get_hostname()) {
-            Some(new_name) => new_name,
-            None => service.get_hostname(),
-        };
-
-        let ptr_added = self.add_answer(
-            msg,
-            DnsPointer::new(
-                service.get_type(),
-                RRType::PTR,
-                CLASS_IN,
-                service.get_other_ttl(),
-                service_fullname.to_string(),
-            ),
-        );
-
-        if !ptr_added {
-            trace!("answer was not added for msg {:?}", msg);
-            return;
-        }
-
-        if let Some(sub) = service.get_subtype() {
-            trace!("Adding subdomain {}", sub);
-            self.add_additional_answer(DnsPointer::new(
-                sub,
-                RRType::PTR,
-                CLASS_IN,
-                service.get_other_ttl(),
-                service_fullname.to_string(),
-            ));
-        }
-
-        // Add recommended additional answers according to
-        // https://tools.ietf.org/html/rfc6763#section-12.1.
-        self.add_additional_answer(DnsSrv::new(
-            service_fullname,
-            CLASS_IN | CLASS_CACHE_FLUSH,
-            service.get_host_ttl(),
-            service.get_priority(),
-            service.get_weight(),
-            service.get_port(),
-            hostname.to_string(),
-        ));
-
-        self.add_additional_answer(DnsTxt::new(
-            service_fullname,
-            CLASS_IN | CLASS_CACHE_FLUSH,
-            service.get_host_ttl(),
-            service.generate_txt(),
-        ));
-
-        // for address in intf_addrs {
-        //     self.add_additional_answer(DnsAddress::new(
-        //         hostname,
-        //         ip_address_to_type(&address),
-        //         CLASS_IN | CLASS_CACHE_FLUSH,
-        //         service.get_host_ttl(),
-        //         address,
-        //     ));
-        // }
-    }
+    // pub fn add_answer_with_additionals(
+    //     &mut self,
+    //     msg: &DnsIncoming,
+    //     service: &ServiceInfo,
+    //     /*intf: &Interface,*/
+    //     dns_registry: &DnsRegistry,
+    // ) {
+    //     // let intf_addrs = service.get_addrs_on_intf(intf);
+    //     // if intf_addrs.is_empty() {
+    //     //     trace!("No addrs on LAN of intf {:?}", intf);
+    //     //     return;
+    //     // }
+    //
+    //     // check if we changed our name due to conflicts.
+    //     let service_fullname = match dns_registry.name_changes.get(service.get_fullname()) {
+    //         Some(new_name) => new_name,
+    //         None => service.get_fullname(),
+    //     };
+    //
+    //     let hostname = match dns_registry.name_changes.get(service.get_hostname()) {
+    //         Some(new_name) => new_name,
+    //         None => service.get_hostname(),
+    //     };
+    //
+    //     let ptr_added = self.add_answer(
+    //         msg,
+    //         DnsPointer::new(
+    //             service.get_type(),
+    //             RRType::PTR,
+    //             CLASS_IN,
+    //             service.get_other_ttl(),
+    //             service_fullname.to_string(),
+    //         ),
+    //     );
+    //
+    //     if !ptr_added {
+    //         trace!("answer was not added for msg {:?}", msg);
+    //         return;
+    //     }
+    //
+    //     if let Some(sub) = service.get_subtype() {
+    //         trace!("Adding subdomain {}", sub);
+    //         self.add_additional_answer(DnsPointer::new(
+    //             sub,
+    //             RRType::PTR,
+    //             CLASS_IN,
+    //             service.get_other_ttl(),
+    //             service_fullname.to_string(),
+    //         ));
+    //     }
+    //
+    //     // Add recommended additional answers according to
+    //     // https://tools.ietf.org/html/rfc6763#section-12.1.
+    //     self.add_additional_answer(DnsSrv::new(
+    //         service_fullname,
+    //         CLASS_IN | CLASS_CACHE_FLUSH,
+    //         service.get_host_ttl(),
+    //         service.get_priority(),
+    //         service.get_weight(),
+    //         service.get_port(),
+    //         hostname.to_string(),
+    //     ));
+    //
+    //     self.add_additional_answer(DnsTxt::new(
+    //         service_fullname,
+    //         CLASS_IN | CLASS_CACHE_FLUSH,
+    //         service.get_host_ttl(),
+    //         service.generate_txt(),
+    //     ));
+    //
+    //     // for address in intf_addrs {
+    //     //     self.add_additional_answer(DnsAddress::new(
+    //     //         hostname,
+    //     //         ip_address_to_type(&address),
+    //     //         CLASS_IN | CLASS_CACHE_FLUSH,
+    //     //         service.get_host_ttl(),
+    //     //         address,
+    //     //     ));
+    //     // }
+    // }
 
     pub fn add_question(&mut self, name: &str, qtype: RRType) {
         let q = DnsQuestion {
