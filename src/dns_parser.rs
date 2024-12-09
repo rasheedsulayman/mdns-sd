@@ -128,7 +128,7 @@ pub const FLAGS_AA: u16 = 0x0400;
 ///             both single packet and multi-packet.
 pub const FLAGS_TC: u16 = 0x0200;
 
-pub(crate) type DnsRecordBox = Box<dyn DnsRecordExt>;
+pub type DnsRecordBox = Box<dyn DnsRecordExt>;
 
 impl Clone for DnsRecordBox {
     fn clone(&self) -> Self {
@@ -332,7 +332,7 @@ impl PartialEq for DnsRecord {
     }
 }
 
-pub(crate) trait DnsRecordExt: fmt::Debug {
+pub trait DnsRecordExt: fmt::Debug {
     fn get_record(&self) -> &DnsRecord;
     fn get_record_mut(&mut self) -> &mut DnsRecord;
     fn write(&self, packet: &mut DnsOutPacket);
@@ -1186,11 +1186,11 @@ impl DnsOutPacket {
 
 /// Representation of one or more outgoing packet(s). The actual encoded packet
 /// is [DnsOutPacket].
-pub(crate) struct DnsOutgoing {
+pub struct DnsOutgoing {
     flags: u16,
     pub(crate) id: u16,
     multicast: bool,
-    pub(crate) questions: Vec<DnsQuestion>,
+    pub questions: Vec<DnsQuestion>,
     pub(crate) answers: Vec<(DnsRecordBox, u64)>,
     pub(crate) authorities: Vec<DnsRecordBox>,
     pub(crate) additionals: Vec<DnsRecordBox>,
@@ -1198,7 +1198,7 @@ pub(crate) struct DnsOutgoing {
 }
 
 impl DnsOutgoing {
-    pub(crate) fn new(flags: u16) -> Self {
+    pub fn new(flags: u16) -> Self {
         Self {
             flags,
             id: 0,
@@ -1386,7 +1386,7 @@ impl DnsOutgoing {
         }
     }
 
-    pub(crate) fn add_question(&mut self, name: &str, qtype: RRType) {
+    pub fn add_question(&mut self, name: &str, qtype: RRType) {
         let q = DnsQuestion {
             entry: DnsEntry::new(name.to_string(), qtype, CLASS_IN),
         };
@@ -1394,7 +1394,7 @@ impl DnsOutgoing {
     }
 
     /// Returns a list of actual DNS packet data to be sent on the wire.
-    pub(crate) fn to_data_on_wire(&self) -> Vec<Vec<u8>> {
+    pub fn to_data_on_wire(&self) -> Vec<Vec<u8>> {
         let packet_list = self.to_packets();
         packet_list.iter().map(|p| p.data.concat()).collect()
     }
